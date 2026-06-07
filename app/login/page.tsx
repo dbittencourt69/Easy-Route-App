@@ -26,15 +26,12 @@ export default function LoginPage() {
       }
     }
 
-    checkSession();
+    void checkSession();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      if (
-        (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") &&
-        session?.access_token
-      ) {
+      if (event === "SIGNED_IN" && session?.access_token) {
         window.location.href = "/techs";
       }
     });
@@ -79,16 +76,10 @@ export default function LoginPage() {
     }
 
     setMessage(`Login successful for ${data.user?.email}. Redirecting...`);
-
-    setTimeout(() => {
-      window.location.href = "/techs";
-    }, 300);
-
-    setLoadingPassword(false);
+    window.location.href = "/techs";
   }
 
-  async function handleMagicLink(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function handleMagicLink() {
     if (loadingPassword || loadingMagicLink) return;
 
     setLoadingMagicLink(true);
@@ -103,15 +94,11 @@ export default function LoginPage() {
       return;
     }
 
-    const redirectTo =
-      typeof window !== "undefined"
-        ? `${window.location.origin}/techs`
-        : undefined;
-
     const { error } = await supabase.auth.signInWithOtp({
       email: cleanEmail,
       options: {
-        emailRedirectTo: redirectTo,
+        emailRedirectTo: `${window.location.origin}/techs`,
+        shouldCreateUser: false,
       },
     });
 
@@ -131,16 +118,13 @@ export default function LoginPage() {
         <div className="mb-5">
           <h1 className="text-2xl font-bold text-gray-900">Admin Login</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Sign in with your admin email and password, or request a magic link.
+            Sign in with password or request a magic link.
           </p>
         </div>
 
         <form onSubmit={handlePasswordLogin} className="space-y-4">
           <div>
-            <label
-              htmlFor="email"
-              className="mb-1 block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">
               Email
             </label>
             <input
@@ -156,10 +140,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="mb-1 block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-700">
               Password
             </label>
             <input
@@ -168,7 +149,7 @@ export default function LoginPage() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="Optional for magic link"
               className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm outline-none transition focus:border-gray-400"
             />
           </div>
@@ -196,9 +177,7 @@ export default function LoginPage() {
 
             <button
               type="button"
-              onClick={(e) => {
-                void handleMagicLink(e as unknown as FormEvent<HTMLFormElement>);
-              }}
+              onClick={() => void handleMagicLink()}
               disabled={loadingPassword || loadingMagicLink}
               className="inline-flex w-full items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-900 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
